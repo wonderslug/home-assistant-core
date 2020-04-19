@@ -121,6 +121,7 @@ FLOWS = [
     "tado",
     "tellduslive",
     "tesla",
+    "tibber",
     "toon",
     "totalconnect",
     "tplink",
