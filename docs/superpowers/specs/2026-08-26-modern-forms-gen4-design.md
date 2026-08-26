@@ -20,8 +20,10 @@ confirmed against real hardware, not just the vendor spec.
 This design covers all 5 stages of work end to end: the dependency bump and
 identity fix, per-fixture light entities (parity), capability gating
 (correctness), color-temperature control, and identify buttons (new
-functionality). Docs updates to home-assistant.io are included but land as
-a separate PR after the core PR merges.
+functionality). Per Home Assistant's PR conventions (see "Rollout
+structure" below), this becomes two `home-assistant-core` PRs — a
+dependency-upgrade PR and a stacked feature PR — plus a linked
+`home-assistant.io` docs PR.
 
 ## What the library gives us
 
@@ -251,20 +253,37 @@ exploratory verification, not part of the automated suite.
 
 ## Rollout structure
 
-One `home-assistant-core` PR containing all 5 stages as separate commits,
-in this order (each independently testable against both `gen4` and
-`gen1_2`/`gen3` fixtures, so a regression is bisectable):
+This follows the same split Home Assistant already used for this
+integration's last dependency bump: `aiomodernforms` 0.2.0 was its own PR
+(#177506, "Dependency upgrade" checkbox only), with breeze-mode support
+stacked on top as a second PR (#177507, "New feature" checkbox only,
+explicitly depending on #177506) — the PR template only allows checking
+one "type of change" box and instructs splitting into multiple PRs
+otherwise.
 
-1. Bump `aiomodernforms` to 0.3.0; add Gen4 config-flow test confirming
-   identity works with zero other code changes.
-2. Per-fixture light entities.
-3. Capability gating (`switch.py`, `binary_sensor.py`, `sensor.py`).
-4. Color temperature support.
-5. Identify buttons (new `button.py` platform).
+**PR 1 (`home-assistant-core`): dependency bump.**
+- Bump `manifest.json`'s `requirements` to `["aiomodernforms==0.3.0"]`,
+  regenerate `requirements_all.txt`.
+- Add the Gen4 config-flow identity test (confirms the bump alone makes
+  Gen4 fans addable, with zero other code changes).
+- Type of change: Dependency upgrade.
 
-**Docs** land as a separate `home-assistant.io` PR after the core PR
-merges — matching the existing `modern-forms-breeze-mode-docs` precedent
-rather than blocking the core PR on docs review. Update
+**PR 2 (`home-assistant-core`, stacked on PR 1): Gen4 fan support.**
+Bundles the remaining 4 stages as separate commits for reviewability
+(each independently testable against both `gen4` and `gen1_2`/`gen3`
+fixtures, so a regression is bisectable), matching how the breeze-mode PR
+bundled its preset-mode feature and new number entity into one "New
+feature" PR:
+1. Per-fixture light entities (parity).
+2. Capability gating (`switch.py`, `binary_sensor.py`, `sensor.py`).
+3. Color temperature support.
+4. Identify buttons (new `button.py` platform).
+- Type of change: New feature.
+- Links to PR 3 in its "Link to documentation pull request" field, per
+  the PR template — opened alongside PR 2 rather than deferred until
+  after merge.
+
+**PR 3 (`home-assistant.io`): docs, linked from PR 2.** Update
 `source/_integrations/modern_forms.markdown`:
 - Add `button` to `ha_platforms` and `Button` to `ha_category`.
 - New `## Buttons` section describing the identify button(s), noting they
