@@ -261,3 +261,22 @@ async def test_light_no_color_temp_on_legacy(
     state = hass.states.get("light.modernformsfan_light")
     assert state
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.BRIGHTNESS]
+
+
+async def test_light_sleep_timer_not_supported_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setting a sleep timer on a Gen4 light fixture raises an error."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_SLEEP_TIMER,
+            {ATTR_ENTITY_ID: "light.modernformsfan_uplight", ATTR_SLEEP_TIME: 1},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "sleep_timer_not_supported"

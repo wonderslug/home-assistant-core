@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -24,7 +25,9 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
+    DOMAIN,
     OPT_BRIGHTNESS,
+    OPT_COLOR_TEMP_KELVIN,
     OPT_ON,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
@@ -162,7 +165,7 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
                 BRIGHTNESS_RANGE, kwargs[ATTR_BRIGHTNESS]
             )
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            data["color_temp_kelvin"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            data[OPT_COLOR_TEMP_KELVIN] = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
         await self._async_control_light(**data)
 
@@ -172,6 +175,11 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self._async_control_light(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
@@ -179,6 +187,11 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         self,
     ) -> None:
         """Clear a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self._async_control_light(sleep=CLEAR_TIMER)
 
     async def _async_control_light(self, **kwargs: Any) -> None:

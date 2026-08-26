@@ -33,6 +33,11 @@
         "name": "Light sleep timer active"
       }
     },
+    "button": {
+      "identify_light": {
+        "name": "Identify {fixture_name}"
+      }
+    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]"
@@ -71,6 +76,9 @@
     },
     "invalid_response": {
       "message": "Invalid response from the Modern Forms device"
+    },
+    "sleep_timer_not_supported": {
+      "message": "This fan does not support sleep timers"
     }
   },
   "services": {

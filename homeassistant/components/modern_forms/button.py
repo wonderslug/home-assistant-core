@@ -66,6 +66,8 @@ class ModernFormsIdentifyLightButton(ModernFormsDeviceEntity, ButtonEntity):
         self,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
+        # Always a real address: this class is only constructed for Gen4
+        # fixtures (has_identify() is Gen4-only), which never have address=None.
         light_address: int,
     ) -> None:
         """Initialize the fixture identify button."""
@@ -73,7 +75,8 @@ class ModernFormsIdentifyLightButton(ModernFormsDeviceEntity, ButtonEntity):
         self._address = light_address
         mac_address = self.coordinator.data.info.mac_address
         self._attr_unique_id = f"{mac_address}_{light_address}_identify"
-        self._attr_name = f"Identify {self._light_name}"
+        self._attr_translation_key = "identify_light"
+        self._attr_translation_placeholders = {"fixture_name": self._light_name}
 
     @property
     def _light_name(self) -> str:
