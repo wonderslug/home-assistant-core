@@ -5,7 +5,15 @@ from unittest.mock import patch
 from aiomodernforms import ModernFormsConnectionError
 import pytest
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
 from homeassistant.components.modern_forms.const import (
     ATTR_SLEEP_TIME,
     DOMAIN,
@@ -213,3 +221,43 @@ async def test_light_change_state_gen4(
         await hass.async_block_till_done()
         light_fixture_mock.assert_called_once_with(2, on=False)
         light_mock.assert_not_called()
+
+
+async def test_light_color_temp_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Gen4 light fixtures advertise and control color temperature."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    state = hass.states.get("light.modernformsfan_uplight")
+    assert state
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 3000
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2700
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 5000
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
+
+    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.modernformsfan_uplight",
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light_fixture_mock.assert_called_once_with(2, on=True, color_temp_kelvin=4000)
+
+
+async def test_light_no_color_temp_on_legacy(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Gen 1/2/3 lights never advertise color temperature."""
+    await init_integration(hass, aioclient_mock)
+
+    state = hass.states.get("light.modernformsfan_light")
+    assert state
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.BRIGHTNESS]
