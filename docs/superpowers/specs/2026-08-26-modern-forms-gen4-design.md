@@ -292,3 +292,15 @@ feature" PR:
   Gen4 fans and color-temperature support where available.
 - No `ha_release` bump — that field tracks the integration's original
   release, not per-feature changes.
+
+**Combined testing branch on `origin`.** Real Gen4 fan owners can't
+reasonably check out two stacked, unmerged upstream PR branches just to
+test a feature — so alongside the PR1/PR2 split above, maintain a single
+combined branch pushed to `origin` (this fork) containing every commit
+from both PRs, PR 1's bump commit first and PR 2's feature commits stacked
+on top (the current `modernforms-gen4-fans` branch is that branch). This
+is what gets shared with real hardware owners for validation, kept in
+sync as review feedback lands on either PR. It's a superset of PR 2's
+branch, not a separate line of work, and it complements rather than
+replaces the mock-server-based automated testing above — mock testing
+doesn't need real hardware; this branch is for the people who have one.
