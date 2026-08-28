@@ -33,11 +33,6 @@
         "name": "Light sleep timer active"
       }
     },
-    "button": {
-      "identify_light": {
-        "name": "Identify {fixture_name}"
-      }
-    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]"
