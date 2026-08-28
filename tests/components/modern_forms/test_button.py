@@ -27,14 +27,10 @@ async def test_identify_buttons_gen4(
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the creation of identify buttons for a multi-fixture Gen4 fan."""
+    """Test the creation of per-fixture identify buttons for a Gen4 fan."""
     await init_integration_gen4(hass, aioclient_mock)
 
-    state = hass.states.get("button.modernformsfan_identify")
-    assert state
-    entry = entity_registry.async_get("button.modernformsfan_identify")
-    assert entry
-    assert entry.unique_id == "AA:BB:CC:00:11:22_identify"
+    assert hass.states.get("button.modernformsfan_identify") is None
 
     state = hass.states.get("button.modernformsfan_identify_uplight")
     assert state
@@ -47,23 +43,6 @@ async def test_identify_buttons_gen4(
     entry = entity_registry.async_get("button.modernformsfan_identify_downlight")
     assert entry
     assert entry.unique_id == "AA:BB:CC:00:11:22_3_identify"
-
-
-async def test_identify_fan_button_press(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test pressing the device-level identify button."""
-    await init_integration_gen4(hass, aioclient_mock)
-
-    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.modernformsfan_identify"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        fan_mock.assert_called_once_with(identify=True)
 
 
 async def test_identify_light_button_press(

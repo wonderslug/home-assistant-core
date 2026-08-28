@@ -33,7 +33,7 @@ from .const import (
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
-from .entity import ModernFormsDeviceEntity
+from .entity import ModernFormsDeviceEntity, strip_device_name_prefix
 
 BRIGHTNESS_RANGE = (1, 255)
 
@@ -104,7 +104,9 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
             # an entity's name, so the "light" translation_key above simply
             # goes unused for these entities.
             self._attr_unique_id = f"{mac_address}_{light_address}"
-            self._attr_name = self._light.name
+            self._attr_name = strip_device_name_prefix(
+                self.coordinator.data.info.device_name, self._light.name
+            )
 
         if (
             self._light.min_color_temp_kelvin is not None

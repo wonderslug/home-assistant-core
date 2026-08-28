@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import modernforms_exception_handler
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
-from .entity import ModernFormsDeviceEntity
+from .entity import ModernFormsDeviceEntity, strip_device_name_prefix
 
 
 async def async_setup_entry(
@@ -23,37 +23,12 @@ async def async_setup_entry(
     if not coordinator.data.has_identify():
         return
 
-    entities: list[ModernFormsDeviceEntity] = [
-        ModernFormsIdentifyFanButton(config_entry.entry_id, coordinator)
-    ]
-    entities.extend(
+    async_add_entities(
         ModernFormsIdentifyLightButton(
             config_entry.entry_id, coordinator, light.address
         )
         for light in coordinator.data.state.light_fixtures
     )
-
-    async_add_entities(entities)
-
-
-class ModernFormsIdentifyFanButton(ModernFormsDeviceEntity, ButtonEntity):
-    """Defines a Modern Forms fan identify button."""
-
-    _attr_device_class = ButtonDeviceClass.IDENTIFY
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(
-        self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
-    ) -> None:
-        """Initialize the identify button."""
-        super().__init__(entry_id=entry_id, coordinator=coordinator)
-        self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_identify"
-
-    @modernforms_exception_handler
-    @override
-    async def async_press(self) -> None:
-        """Trigger the fan's physical identify signal."""
-        await self.coordinator.modern_forms.fan(identify=True)
 
 
 class ModernFormsIdentifyLightButton(ModernFormsDeviceEntity, ButtonEntity):
@@ -81,9 +56,10 @@ class ModernFormsIdentifyLightButton(ModernFormsDeviceEntity, ButtonEntity):
     @property
     def _light_name(self) -> str:
         """Return this fixture's current name."""
+        device_name = self.coordinator.data.info.device_name
         for light in self.coordinator.data.state.light_fixtures:
             if light.address == self._address:
-                return light.name
+                return strip_device_name_prefix(device_name, light.name)
         return ""
 
     @modernforms_exception_handler
